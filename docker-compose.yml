@@ -1,0 +1,14 @@
+services:
+  database:
+    image: postgres:15
+    container_name: prueba-finanty-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin2026
+      POSTGRES_DB: finanty_store_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
