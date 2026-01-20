@@ -1,73 +1,32 @@
-# React + TypeScript + Vite
+# Frontend - PokeApp Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Esta es la aplicacion cliente desarrollada con **React 18** y **TypeScript**, utilizando **Vite** como herramienta de construccion [cite: 2026-01-15, 2026-01-20].
 
-Currently, two official plugins are available:
+##  Tecnologias Principales
+- **React 18**: Biblioteca principal de UI [cite: 2026-01-15].
+- **TypeScript**: Tipado estricto para garantizar la robustez del codigo [cite: 2026-01-15].
+- **Material UI**: Sistema de componentes y diseño [cite: 2026-01-20].
+- **Vitest**: Framework de pruebas unitarias de alto rendimiento [cite: 2026-01-20].
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Scripts Disponibles
 
-## React Compiler
+Dentro de esta carpeta, puedes ejecutar:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### `npm run dev`
+Inicia el servidor de desarrollo en local [cite: 2026-01-20].
 
-## Expanding the ESLint configuration
+### `npx vitest run`
+Ejecuta la suite de pruebas unitarias [cite: 2026-01-20].
+*Nota: Se han implementado mocks para los iconos de Material UI para optimizar la velocidad en Windows [cite: 2026-01-20].*
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### `npm run build`
+Crea la version de produccion optimizada en la carpeta `dist/` [cite: 2026-01-20].
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Detalle de Pruebas
+Se han cubierto los siguientes escenarios:
+- Renderizado correcto de componentes (`PokemonCard`, `SearchBar`) [cite: 2026-01-20].
+- Interaccion con botones (ej: boton de Visibilidad) [cite: 2026-01-20].
+- Formateo correcto de IDs de Pokemon (ej: #001) [cite: 2026-01-19].
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+*Este proyecto sigue el estandar de nombres en ingles para variables y funciones [cite: 2026-01-15].*
