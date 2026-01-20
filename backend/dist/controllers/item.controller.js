@@ -1,8 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchItems = exports.deleteItem = exports.updateItem = exports.createItem = exports.getItemById = exports.getItems = void 0;
+exports.getExternalPokemons = exports.searchItems = exports.deleteItem = exports.updateItem = exports.createItem = exports.getItemById = exports.getItems = void 0;
 const database_1 = require("../config/database");
 const pokemon_service_1 = require("../services/pokemon.service");
+const axios_1 = __importDefault(require("axios"));
 const getItems = async (req, res, next) => {
     try {
         // Obtenemos página y límite de la URL, ej: /api/items?page=1&limit=10
@@ -29,19 +33,32 @@ const getItems = async (req, res, next) => {
     }
 };
 exports.getItems = getItems;
+// Backend: controller.ts
 const getItemById = async (req, res, next) => {
+    // IMPORTANTE: Este 'id' que recibes ahora lo trataremos SIEMPRE como el external_id
     const { id } = req.params;
     try {
-        if (isNaN(Number(id))) {
-            return res.status(400).json({ message: 'El ID proporcionado no es válido.' });
-        }
-        const result = await database_1.dbPool.query('SELECT * FROM items WHERE id = $1', [id]);
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Pokémon no encontrado en la base de datos.' });
-        }
-        res.json(result.rows[0]);
+        // 1. Buscamos en nuestra DB si es un favorito usando SOLO el external_id
+        const result = await database_1.dbPool.query('SELECT * FROM items WHERE external_id = $1', [id]);
+        const localData = result.rows[0];
+        // 2. Vamos a la PokeAPI usando el mismo 'id' (que es el de la pokedex)
+        const response = await axios_1.default.get(`${pokemon_service_1.POKE_API_BASE_URL}/${id}`);
+        const fullData = response.data;
+        // 3. Devolvemos la respuesta unificada
+        res.json({
+            id: localData ? localData.id : null,
+            external_id: fullData.id,
+            name: fullData.name,
+            image_url: fullData.sprites.other['official-artwork'].front_default,
+            type: fullData.types[0].type.name,
+            stats: fullData.stats,
+            weight: fullData.weight,
+            height: fullData.height,
+            isFavorite: !!localData
+        });
     }
     catch (error) {
+        // Si la PokeAPI no lo encuentra o hay otro error
         next(error);
     }
 };
@@ -127,3 +144,17 @@ const searchItems = async (req, res, next) => {
     }
 };
 exports.searchItems = searchItems;
+// En tu controller de backend
+const getExternalPokemons = async (req, res, next) => {
+    try {
+        const { limit = 151, offset = 0 } = req.query;
+        // Importante: No uses params.id aquí, usa la URL de PokeAPI directamente
+        const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`);
+        const data = await response.json();
+        res.status(200).json(data);
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getExternalPokemons = getExternalPokemons;

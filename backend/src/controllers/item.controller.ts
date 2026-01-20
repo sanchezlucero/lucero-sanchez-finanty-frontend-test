@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { dbPool } from '../config/database';
-import { fetchPokemonData } from '../services/pokemon.service';
+import { fetchPokemonData, POKE_API_BASE_URL } from '../services/pokemon.service';
 import { DatabaseError } from 'pg';
+import axios from 'axios';
 
 export const getItems = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -34,25 +35,65 @@ export const getItems = async (req: Request, res: Response, next: NextFunction) 
     }
 };
 
+interface PokeApiPokemon {
+    id: number;
+    name: string;
+    weight: number;
+    height: number;
+    stats: Array<{
+        base_stat: number;
+        stat: { name: string }
+    }>;
+    abilities: Array<{
+        ability: { name: string };
+        is_hidden: boolean
+    }>; //
+    types: Array<{
+        slot: number;
+        type: { name: string }
+    }>; // La PokeAPI usa "types" en plural
+    sprites: {
+        other: {
+            'official-artwork': {
+                front_default: string
+            }
+        }
+    };
+}
+// Backend: controller.ts
 export const getItemById = async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+    // IMPORTANTE: Este 'id' que recibes ahora lo trataremos SIEMPRE como el external_id
+    const { id } = req.params; 
+
     try {
-        if (isNaN(Number(id))) {
-            return res.status(400).json({ message: 'El ID proporcionado no es válido.' });
-        }
-        const result = await dbPool.query('SELECT * FROM items WHERE id = $1', [id]);
+        // 1. Buscamos en nuestra DB si es un favorito usando SOLO el external_id
+        const result = await dbPool.query(
+            'SELECT * FROM items WHERE external_id = $1', 
+            [id]
+        );
+        const localData = result.rows[0];
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Pokémon no encontrado en la base de datos.' });
-        }
+        // 2. Vamos a la PokeAPI usando el mismo 'id' (que es el de la pokedex)
+        const response = await axios.get<PokeApiPokemon>(`${POKE_API_BASE_URL}/${id}`);
+        const fullData = response.data;
 
-        res.json(result.rows[0]);
+        // 3. Devolvemos la respuesta unificada
+        res.json({
+            id: localData ? localData.id : null, 
+            external_id: fullData.id,
+            name: fullData.name,
+            image_url: fullData.sprites.other['official-artwork'].front_default,
+            type: fullData.types[0].type.name,
+            stats: fullData.stats,
+            weight: fullData.weight,
+            height: fullData.height,
+            isFavorite: !!localData
+        });
     } catch (error) {
+        // Si la PokeAPI no lo encuentra o hay otro error
         next(error);
     }
 };
-
-
 export const createItem = async (req: Request, res: Response, next: NextFunction) => {
     const { pokemonId } = req.body; // El usuario enviará el ID que quiere guardar
     if (!pokemonId || typeof pokemonId !== 'number') {
@@ -116,12 +157,12 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
     } catch (error: unknown) {
         // Tipamos el error de forma segura
         const dbError = error as DatabaseError;
-        
+
         // Si el ID es inválido para la base de datos (ej: muy grande o mal formato)
         if (dbError.code === '22P02' || dbError.code === '22003') {
             return res.status(404).json({ message: 'Pokémon no encontrado (ID inválido).' });
         }
-        
+
         next(dbError);
     }
 };
@@ -140,6 +181,19 @@ export const searchItems = async (req: Request, res: Response, next: NextFunctio
 
         res.status(200).json(result.rows);
     } catch (error: unknown) {
+        next(error);
+    }
+};
+
+// En tu controller de backend
+export const getExternalPokemons = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { limit = 151, offset = 0 } = req.query;
+        // Importante: No uses params.id aquí, usa la URL de PokeAPI directamente
+        const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`);
+        const data = await response.json();
+        res.status(200).json(data);
+    } catch (error) {
         next(error);
     }
 };

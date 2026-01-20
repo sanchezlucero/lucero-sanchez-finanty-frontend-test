@@ -1,18 +1,18 @@
 import axios from 'axios';
 import { PokemonItem } from '../models/item.interface';
 
-const POKE_API_BASE_URL = 'https://pokeapi.co/api/v2/pokemon';
+export const POKE_API_BASE_URL = 'https://pokeapi.co/api/v2/pokemon';
 
 export const fetchPokemonData = async (pokemonId: number): Promise<PokemonItem> => {
   try {
     const response = await axios.get(`${POKE_API_BASE_URL}/${pokemonId}`);
     const data = response.data;
 
-    // Mapeamos los datos de la API a nuestra interfaz
     return {
       external_id: data.id,
       name: data.name,
-      image_url: data.sprites.front_default,
+      // CAMBIO AQUÍ: Usamos la imagen oficial de alta calidad [cite: 2026-01-19]
+      image_url: data.sprites.other['official-artwork'].front_default, 
       type: data.types[0].type.name
     };
   } catch (error) {
