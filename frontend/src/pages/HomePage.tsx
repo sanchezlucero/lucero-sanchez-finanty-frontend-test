@@ -3,15 +3,11 @@ import {
   Container,
   Grid,
   Box,
-  TextField,
-  InputAdornment,
   Pagination,
   CircularProgress,
   Alert,
   Typography,
 } from "@mui/material";
-import { Search } from "@mui/icons-material";
-import type { Pokemon } from "../types/pokemon";
 import { PokemonCard } from "../components/CardPokemon";
 import { usePokemons } from "../hooks/usePokemon";
 import { SearchBar } from "../components/SearchBar";
