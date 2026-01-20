@@ -13,6 +13,7 @@ export interface PokemonAbility {
 
 export interface Pokemon {
     id: number;
+    external_id?: number;
     name: string;
     imageUrl: string;
     types: PokemonType[];
